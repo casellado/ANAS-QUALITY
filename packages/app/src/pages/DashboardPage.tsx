@@ -6,6 +6,7 @@ import { PesModulo } from '@/components/pes/PesModulo'
 import { BachecaNote } from '@/components/note/BachecaNote'
 import { ModalPanel } from '@/components/ui/ModalPanel'
 import { DevRoleSwitcher } from '@/components/ui/DevRoleSwitcher'
+import iconAutobetoniera from '@/assets/icons/autobetoniera.svg'
 
 type Ruolo = 'coordinatore' | 'ispettore'
 
@@ -25,14 +26,24 @@ function leggiProfilo(): { cognome: string; qualifica: string; email: string; ru
 }
 
 // ── Config card griglia ──────────────────────────────────────
-const CARD_CFG = [
-  { id: 'pes',           label: 'PES',           sub: 'Piano Esecutivo Prove',   icon: '📋', grad: 'from-brand-amber to-brand-amber-l',   textCls: 'text-brand-bg' },
-  { id: 'calcestruzzo',  label: 'CALCESTRUZZO',  sub: 'Verbali & Prelievi',      icon: '🏗️', grad: 'from-brand-blue to-brand-blue-l',     textCls: 'text-white' },
-  { id: 'acciaio',       label: 'ACCIAIO',       sub: 'Controlli & Certificati', icon: '⚙️', grad: 'from-brand-violet to-brand-violet-l', textCls: 'text-white' },
-  { id: 'terre',         label: 'TERRE',         sub: 'Prove & Analisi',         icon: '🌍', grad: 'from-brand-teal to-brand-teal-l',     textCls: 'text-white' },
-  { id: 'conglomerato',  label: 'CONGLOMERATI',  sub: 'Bituminosi & Strati',     icon: '🛣️', grad: 'from-brand-amber to-brand-amber-l',   textCls: 'text-white' },
-  { id: 'note',          label: 'NOTE',          sub: 'Bacheca condivisa',       icon: '📌', grad: 'from-brand-text3 to-brand-line2',     textCls: 'text-white' },
-] as const
+interface CardCfg {
+  readonly id:    string
+  readonly label: string
+  readonly sub:   string
+  readonly icon:  string          // emoji o URL immagine importata
+  readonly isImg?: boolean        // true = icon è un URL immagine
+  readonly grad:  string
+  readonly textCls: string
+}
+
+const CARD_CFG: CardCfg[] = [
+  { id: 'pes',           label: 'PES',           sub: 'Piano Esecutivo Prove',   icon: '📋',               grad: 'from-brand-amber to-brand-amber-l',   textCls: 'text-brand-bg' },
+  { id: 'calcestruzzo',  label: 'CALCESTRUZZO',  sub: 'Verbali & Prelievi',      icon: iconAutobetoniera, isImg: true, grad: 'from-brand-blue to-brand-blue-l', textCls: 'text-white' },
+  { id: 'acciaio',       label: 'ACCIAIO',       sub: 'Controlli & Certificati', icon: '⚙️',               grad: 'from-brand-violet to-brand-violet-l', textCls: 'text-white' },
+  { id: 'terre',         label: 'TERRE',         sub: 'Prove & Analisi',         icon: '🌍',               grad: 'from-brand-teal to-brand-teal-l',     textCls: 'text-white' },
+  { id: 'conglomerato',  label: 'CONGLOMERATI',  sub: 'Bituminosi & Strati',     icon: '🛣️',               grad: 'from-brand-amber to-brand-amber-l',   textCls: 'text-white' },
+  { id: 'note',          label: 'NOTE',          sub: 'Bacheca condivisa',       icon: '📌',               grad: 'from-brand-text3 to-brand-line2',     textCls: 'text-white' },
+]
 
 export default function DashboardPage() {
   const navigate       = useNavigate()
@@ -87,9 +98,11 @@ export default function DashboardPage() {
 
             {/* Icon */}
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.grad}
-                            flex items-center justify-center text-xl shadow-card`}
+                            flex items-center justify-center text-xl shadow-card overflow-hidden`}
                  aria-hidden="true">
-              {cfg.icon}
+              {cfg.isImg
+                ? <img src={cfg.icon} alt="" className="w-8 h-8 object-contain" />
+                : cfg.icon}
             </div>
 
             {/* Text */}
