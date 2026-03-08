@@ -11,6 +11,8 @@ export type { Contatori }            from './types/Contatori'
 export type { WbsEntry }             from './types/WbsEntry'
 export type { Cantiere }             from './types/Cantiere'
 export type { StepType, WizardStep, TipoVerbale, VerbaleModule } from './types/VerbaleModule'
+export type { ConformitaTipo, SopralluogoTipo, EsitoVAG, VAGData } from './types/VerbaleVAG'
+export { verbaleToVAG } from './types/VerbaleVAG'
 export type {
   StatoProvaCalendario,
   CategoriaProva,

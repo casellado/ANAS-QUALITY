@@ -1,0 +1,19 @@
+{
+  "name": "@verbali/mod-calcestruzzo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@verbali/shared":     "workspace:*",
+    "@verbali/pdf-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
+

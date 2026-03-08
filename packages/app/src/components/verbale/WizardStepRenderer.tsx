@@ -8,6 +8,7 @@ import {
   StepRadio,
   StepCheckbox,
 } from '@/components/verbale/steps/SimpleSteps'
+import { StepFirme } from '@/components/verbale/StepFirme'
 
 // ── Placeholder per step complessi (moduli) ─────────────────
 function StepPlaceholder({ config }: StepProps) {
@@ -37,7 +38,7 @@ const STEP_COMPONENTS: Record<StepType, React.ComponentType<StepProps>> = {
   slump:    StepPlaceholder,
   cubetti:  StepPlaceholder,
   foto:     StepPlaceholder,
-  firme:    StepPlaceholder,
+  firme:    StepFirme,
   figura:   StepPlaceholder,
 }
 

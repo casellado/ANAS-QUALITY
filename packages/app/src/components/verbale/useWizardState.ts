@@ -70,6 +70,42 @@ export function useWizardState(tipoVerbale: TipoVerbale, idCantiere: string) {
     if (!step.obbligatorio) return true
 
     const value = String(verbale[step.key as keyof Verbale] ?? '')
+
+    // Validazione firme: tutti i ruoli devono aver firmato
+    if (step.tipo === 'firme') {
+      try {
+        const firme = JSON.parse(value || '{}') as Record<string, string>
+        const ruoli = step.opzioni ?? []
+        const toKey = (s: string) => s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+        const tuttiOk = ruoli.every(r => !!firme[toKey(r)])
+        if (!tuttiOk) {
+          setErrors(prev => ({ ...prev, [step.key]: 'Tutte le firme sono obbligatorie' }))
+          return false
+        }
+        return true
+      } catch {
+        setErrors(prev => ({ ...prev, [step.key]: 'Firme non valide' }))
+        return false
+      }
+    }
+
+    // Validazione checkbox: almeno una selezione
+    if (step.tipo === 'checkbox') {
+      try {
+        const arr = JSON.parse(value || '[]') as string[]
+        if (arr.length === 0) {
+          setErrors(prev => ({ ...prev, [step.key]: 'Seleziona almeno una opzione' }))
+          return false
+        }
+        return true
+      } catch {
+        if (!value.trim()) {
+          setErrors(prev => ({ ...prev, [step.key]: 'Seleziona almeno una opzione' }))
+          return false
+        }
+      }
+    }
+
     if (!value.trim()) {
       setErrors(prev => ({ ...prev, [step.key]: 'Campo obbligatorio' }))
       return false

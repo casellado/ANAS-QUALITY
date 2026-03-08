@@ -10,13 +10,13 @@ import type { VerbaleModule, TipoVerbale } from '@verbali/shared'
  * Decommentare quando il modulo è pronto.
  */
 
-// import { ModuleCalcestruzzo } from '@verbali/mod-calcestruzzo'
+import { ModuleCalcestruzzo } from '@verbali/mod-calcestruzzo'
 // import { ModuleAcciaio }      from '@verbali/mod-acciaio'
 // import { ModuleTerre }        from '@verbali/mod-terre'
 // import { ModuleConglomerati } from '@verbali/mod-conglomerati'
 
 export const MODULE_REGISTRY: VerbaleModule[] = [
-  // ModuleCalcestruzzo,
+  ModuleCalcestruzzo,
   // ModuleAcciaio,
   // ModuleTerre,
   // ModuleConglomerati,

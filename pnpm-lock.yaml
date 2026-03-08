@@ -97,6 +97,19 @@ importers:
         specifier: ^0.20.0
         version: 0.20.5(vite@5.4.21(terser@5.46.0))(workbox-build@7.4.0(@types/babel__core@7.20.5))(workbox-window@7.4.0)
 
+  packages/modules/calcestruzzo:
+    dependencies:
+      '@verbali/pdf-engine':
+        specifier: workspace:*
+        version: link:../../pdf-engine
+      '@verbali/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
   packages/pdf-engine:
     dependencies:
       '@verbali/shared':
