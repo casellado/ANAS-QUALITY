@@ -5,9 +5,12 @@ import { DashboardStats } from '@/components/pes/DashboardStats'
 import { PesModulo } from '@/components/pes/PesModulo'
 import { BachecaNote } from '@/components/note/BachecaNote'
 import { ModalPanel } from '@/components/ui/ModalPanel'
+import { DevRoleSwitcher } from '@/components/ui/DevRoleSwitcher'
+
+type Ruolo = 'coordinatore' | 'ispettore'
 
 // ── Profilo utente da localStorage ───────────────────────────
-function leggiProfilo(): { cognome: string; qualifica: string; email: string; ruolo: 'coordinatore' | 'ispettore' } {
+function leggiProfilo(): { cognome: string; qualifica: string; email: string; ruolo: Ruolo } {
   try {
     const p = JSON.parse(localStorage.getItem('userProfile') ?? '{}')
     return {
@@ -37,6 +40,7 @@ export default function DashboardPage() {
   const profilo        = leggiProfilo()
   const saluto         = getSaluto(profilo.cognome, profilo.qualifica)
 
+  const [ruolo, setRuolo]           = useState<Ruolo>(profilo.ruolo)
   const [modalePes, setModalePes]   = useState(false)
   const [modaleNote, setModaleNote] = useState(false)
 
@@ -97,21 +101,24 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* ── Dev Role Switcher (solo dev mode) ──────────── */}
+      <DevRoleSwitcher ruolo={ruolo} onCambiaRuolo={setRuolo} />
+
       {/* ── Ruolo badge ───────────────────────────────────── */}
       <div className="text-center">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold
-          ${profilo.ruolo === 'coordinatore'
+          ${ruolo === 'coordinatore'
             ? 'badge-amber border border-brand-amber/20'
             : 'badge-blue border border-brand-blue/20'}`}
-          role="status" aria-label={`Ruolo attuale: ${profilo.ruolo}`}>
-          <span aria-hidden="true">{profilo.ruolo === 'coordinatore' ? '🔑' : '👷'}</span>
-          {profilo.ruolo === 'coordinatore' ? 'Coordinatore Prove' : 'Ispettore'}
+          role="status" aria-label={`Ruolo attuale: ${ruolo}`}>
+          <span aria-hidden="true">{ruolo === 'coordinatore' ? '🔑' : '👷'}</span>
+          {ruolo === 'coordinatore' ? 'Coordinatore Prove' : 'Ispettore'}
         </span>
       </div>
 
       {/* ── Modale PES ────────────────────────────────────── */}
       <ModalPanel isOpen={modalePes} onClose={() => setModalePes(false)} title="ANAS PES" icon="📋">
-        <PesModulo idCantiere={cantiereId} ruolo={profilo.ruolo} utenteEmail={profilo.email} />
+        <PesModulo idCantiere={cantiereId} ruolo={ruolo} utenteEmail={profilo.email} />
       </ModalPanel>
 
       {/* ── Modale Note ───────────────────────────────────── */}
