@@ -1,0 +1,78 @@
+---
+description: Architettura, navigazione, id_cantiere, moduli plugin, env config
+globs:
+alwaysApply: true
+---
+
+# Architettura e Navigazione
+
+## MODULE_REGISTRY — regola fondamentale
+Il wizard e la dashboard sono **completamente generici** — leggono tutto dal registry.
+
+```typescript
+// ❌ VIETATO — hardcoded
+if (sigla === 'VPC') return <WizardVPC />
+
+// ✅ CORRETTO — generico
+const tipoVerbale = getTipoVerbale(sigla)
+if (!tipoVerbale) return <Error404 />
+return <VerbaleWizard tipoVerbale={tipoVerbale} />
+```
+
+## Route structure
+```typescript
+'/cantiere/:cantiereId'                          // DashboardPage
+'/cantiere/:cantiereId/:materiale'               // SubmenuMaterialePage ← NON bypassare
+'/cantiere/:cantiereId/:materiale/:sigla/nuovo'  // VerbaleNewPage
+'/cantiere/:cantiereId/verbale/:id/modifica'     // VerbaleEditPage
+'/cantiere/:cantiereId/prove'                    // ProvePage
+'/cantiere/:cantiereId/registro'                 // RegistroPage
+'/cantiere/:cantiereId/registro/cubetti'         // RegistroCubettiPage
+'/admin'                                         // AdminPage (solo admin)
+
+// ❌ VIETATO — salta SubmenuMaterialePage
+'/cantiere/:cantiereId/VPC/nuovo'
+```
+
+## id_cantiere — discriminatore universale
+```typescript
+// OGNI entità persistente DEVE avere id_cantiere
+const nuovoVerbale: Verbale = {
+  id_cantiere: cantiereId,   // MAI undefined/null/stringa vuota
+  id: crypto.randomUUID(),
+  // ...
+}
+
+// OGNI query Dexie DEVE filtrare per id_cantiere
+const verbali = await db.verbali
+  .where({ id_cantiere: cantiereId })
+  .toArray()
+```
+
+## Immutabilità dati — audit trail
+```typescript
+// ✅ Annullare — mai eliminare
+await aggiornaVerbale(id, {
+  stato: 'annullato',
+  storia: [...verbale.storia, {
+    timestamp: new Date().toISOString(),
+    utente: profilo.nome,
+    utente_email: profilo.email,
+    azione: 'annullamento',
+    note: motivazione,
+  }]
+})
+
+// ❌ VIETATO in qualsiasi forma
+await db.verbali.delete(id)
+```
+
+## env.ts — unico file per configurazione
+```typescript
+// ✅ usa sempre ENV
+import { ENV } from '@/config/env'
+const url = `https://login.microsoftonline.com/${ENV.AZURE_TENANT_ID}`
+
+// ❌ VIETATO — hardcoded
+const clientId = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+```

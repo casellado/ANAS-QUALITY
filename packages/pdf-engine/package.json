@@ -1,0 +1,20 @@
+{
+  "name": "@verbali/pdf-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@verbali/shared": "workspace:*",
+    "jspdf": "^2.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
+

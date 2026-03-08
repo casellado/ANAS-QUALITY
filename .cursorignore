@@ -1,0 +1,69 @@
+# ── Build output ─────────────────────────────
+dist/
+**/dist/
+build/
+.output/
+**/.turbo/
+
+# ── Dipendenze ────────────────────────────────
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# ── Cache runtime ─────────────────────────────
+.cache/
+**/.cache/
+*.tsbuildinfo
+**/*.tsbuildinfo
+.vite/
+**/.vite/
+
+# ── Test output ───────────────────────────────
+coverage/
+**/coverage/
+test-results/
+playwright-report/
+
+# ── Log ──────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# ── OS / editor ──────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+
+# ── Secrets ──────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Assets binari ────────────────────────────
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.ico
+**/*.woff
+**/*.woff2
+**/*.ttf
+**/*.eot
+public/icons/
+
+# ── Lock files ────────────────────────────────
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# ── Deploy / CI ───────────────────────────────
+.github/
+Dockerfile
+docker-compose*.yml
+
+# ── Turbo internal ────────────────────────────
+.turbo/

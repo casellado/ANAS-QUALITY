@@ -1,0 +1,69 @@
+---
+description: Sicurezza MSAL, token, scopes, cacheLocation — per auth/* e services/*
+globs: packages/app/src/auth/**,packages/app/src/services/**,packages/app/src/config/msal*
+alwaysApply: false
+---
+
+# MSAL Auth — Sicurezza
+
+## cacheLocation — CRITICO
+```typescript
+// ✅ OBBLIGATORIO — token scadono alla chiusura tab
+const msalConfig: Configuration = {
+  cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
+}
+// ❌ VIETATO — token persistono indefinitamente
+cache: { cacheLocation: 'localStorage' }
+```
+
+## Acquisizione token
+```typescript
+// ✅ acquireTokenSilent con fallback popup
+export async function getToken(): Promise<string> {
+  try {
+    const r = await instance.acquireTokenSilent({ scopes: graphScopes.files, account })
+    return r.accessToken
+  } catch (error) {
+    if (error instanceof InteractionRequiredAuthError) {
+      const r = await instance.acquireTokenPopup({ scopes: graphScopes.loginRequest, account })
+      return r.accessToken
+    }
+    throw error
+  }
+}
+
+// ❌ VIETATO — mai salvare il token
+localStorage.setItem('token', token)
+sessionStorage.setItem('token', token)
+```
+
+## Token nei componenti — mai come prop o state
+```typescript
+// ❌ VIETATO
+<OneDriveUploader token={accessToken} />
+
+// ✅ CORRETTO — service chiama getToken() internamente
+class OneDriveService {
+  constructor(private readonly getToken: () => Promise<string>) {}
+  async read<T>(): Promise<T> {
+    const token = await this.getToken() // fresco ad ogni chiamata
+    // ...
+  }
+}
+```
+
+## piiLoggingEnabled — mai true
+```typescript
+system: { loggerOptions: { piiLoggingEnabled: false } } // SEMPRE false — GDPR
+```
+
+## Scopes minimi necessari
+```typescript
+export const graphScopes = {
+  user:         ['User.Read', 'GroupMember.Read.All'],
+  files:        ['Files.ReadWrite'],
+  loginRequest: ['User.Read', 'GroupMember.Read.All', 'Files.ReadWrite'],
+}
+// ❌ VIETATO — scope troppo ampi
+scopes: ['https://graph.microsoft.com/.default']
+```

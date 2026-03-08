@@ -1,0 +1,77 @@
+---
+description: Naming convention, design system dark, Tailwind tokens — per tutti i file TS/TSX
+globs: packages/app/src/**/*.tsx,packages/app/src/**/*.ts
+alwaysApply: false
+---
+
+# Naming e Design System
+
+## Naming file e directory
+```
+components/  → PascalCase:          MaterialeCard.tsx, VerbaleWizard.tsx
+hooks/       → camelCase + use:     useAuth.ts, useOnlineStatus.ts
+services/    → PascalCase+Service:  OneDriveService.ts, ProveService.ts
+utils/       → camelCase:           naming.ts, saluto.ts
+pages/       → PascalCase+Page:     DashboardPage.tsx, RegistroPage.tsx
+config/      → camelCase:           env.ts, msal.config.ts, moduleRegistry.ts
+db/          → PascalCase+dominio:  VerbaleDB.ts, SyncQueue.ts
+```
+
+## Naming variabili
+```typescript
+// ✅ Boolean con prefisso is/has/can/should
+const isLoading = true; const hasError = false
+const canSubmit = form.isValid && !isLoading
+const isOnline = navigator.onLine
+
+// ✅ Array con nome plurale
+const verbali = await db.verbali.toArray()
+const prove   = await proveService.leggi(cantiereId)
+
+// ✅ Handler con handle prefix
+const handleAvanza = () => setStep(s => s + 1)
+const handleFieldChange = (key: string, value: string) => { ... }
+const handleArchivia = async () => { ... }
+```
+
+## Design system dark — token brand-*
+```tsx
+// ✅ SEMPRE token brand-* — zero hex hardcoded in className
+<div className="bg-brand-bg text-brand-text border border-brand-line rounded-2xl">
+
+// Classi componenti pronte (globals.css):
+// .card           bg-brand-card border border-brand-line rounded-2xl p-4
+// .btn-primary    bg-brand-blue text-white rounded-xl px-6 py-3 min-h-[44px]
+// .btn-ghost      text-brand-text2 hover:text-brand-text rounded-xl px-4 py-2
+// .input-field    bg-brand-bg2 border border-brand-line text-brand-text rounded-xl
+// .radio-row      flex items-center gap-3 p-4 rounded-xl border cursor-pointer
+// .wiz-progress   h-1.5 bg-brand-line rounded-full overflow-hidden
+
+// ❌ VIETATO
+<div className="bg-[#0F1D2E]">      // usa bg-brand-card
+<div style={{ backgroundColor: '#080E1A' }}>  // usa bg-brand-bg
+```
+
+## Codici verbale — solo tramite utility functions
+```typescript
+import { generaCodiceVerbale, generaIdAnasCubetto } from '@verbali/shared'
+
+const codice  = generaCodiceVerbale('VPC', 'A3Napoli', '2025-03-11', 48)
+// → 'VPC-A3Napoli-2025-03-11-048'
+
+const idAnas  = generaIdAnasCubetto(48, 'A', false)
+// → 'CLS 48/A'
+
+// ❌ VIETATO — costruisci codici inline
+const codice = `VPC-${opera}-${data}-${prog.toString().padStart(3,'0')}`
+```
+
+## Classi Tailwind — preferenze
+```
+✅ gap-*          invece di space-x-*/space-y-* per flex/grid
+✅ rounded-2xl    per card,  rounded-xl per bottoni, rounded-lg per badge
+✅ transition-all duration-150  per micro-animazioni
+✅ select-none    su elementi non-selezionabili
+✅ touch-none     su canvas firma (previene scroll)
+✅ tabular-nums + font-mono  per codici e numeri
+```

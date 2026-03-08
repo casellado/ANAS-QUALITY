@@ -1,0 +1,72 @@
+---
+description: TypeScript strict rules — tipi, async, imports, pattern funzioni
+globs: packages/**/*.ts,packages/**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript Strict
+
+## Tipi
+```typescript
+// ✅ interfacce per oggetti, type alias per union/primitivi
+interface VerbaleCardProps { id: string; codice: string; stato: StatoVerbale }
+type StatoVerbale = 'bozza' | 'completo' | 'annullato'
+
+// ✅ generic con constraint
+async function leggi<T extends object>(path: string): Promise<T>
+
+// ✅ any solo con commento (inevitabile)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const graphResponse: any = await response.json() // Graph API schema dinamico
+
+// ❌ any senza giustificazione — VIETATO
+const data: any = fetch(url)
+```
+
+## Imports — monorepo
+```typescript
+// ✅ tipi condivisi SEMPRE da @verbali/shared
+import type { Verbale, Prova, WizardStep } from '@verbali/shared'
+
+// ❌ ridefinire localmente tipi già in shared — VIETATO
+interface Verbale { ... }
+```
+
+## Funzioni
+```typescript
+// ✅ function keyword per funzioni pure e hook
+export function useAuth() { ... }
+export function generaCodiceVerbale(...): string { ... }
+
+// ✅ arrow per componenti React e callbacks
+const MaterialeCard: React.FC<Props> = ({ id, nome }) => { ... }
+
+// ✅ guard clause — early return, no if annidati
+export function validaChainOfCustody(v: Partial<Verbale>): string[] {
+  if (!v.ddt_numero) return ['DDT n° obbligatorio']
+  if (!v.wbs)        return ['WBS obbligatoria']
+  return []
+}
+```
+
+## Async
+```typescript
+// ✅ try/catch esplicito — mai swallowware errori silenziosamente
+async function archiviaVerbale(verbale: Verbale): Promise<void> {
+  try {
+    await oneDriveService.uploadFile(verbale.id_cantiere, path, blob)
+  } catch (error) {
+    toast.error(`Archiviazione fallita: ${error instanceof Error ? error.message : 'Errore'}`)
+    throw error
+  }
+}
+
+// ✅ AbortController in useEffect
+useEffect(() => {
+  const controller = new AbortController()
+  fetchDati(controller.signal).catch(err => {
+    if (!controller.signal.aborted) setError(err)
+  })
+  return () => controller.abort()
+}, [idCantiere])
+```

@@ -1,0 +1,102 @@
+---
+description: Standard componenti React — struttura, hooks, performance, accessibilità
+globs: packages/app/src/**/*.tsx
+alwaysApply: false
+---
+
+# React Components — Standard
+
+## Struttura obbligatoria
+```typescript
+// Ordine: imports → interface → function → hooks → handlers → guard → JSX
+import { useState, useCallback } from 'react'
+import type { Verbale } from '@verbali/shared'
+import { useAuth } from '@/hooks/useAuth'
+
+interface VerbaleCardProps {
+  readonly verbale: Verbale          // readonly se non modificabile
+  readonly onArchivia: (id: string) => Promise<void>
+  readonly className?: string
+}
+
+export function VerbaleCard({ verbale, onArchivia, className }: VerbaleCardProps) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleArchivia = useCallback(async () => {
+    setIsLoading(true)
+    try { await onArchivia(verbale.id) }
+    finally { setIsLoading(false) }
+  }, [verbale.id, onArchivia])
+
+  if (!verbale) return null  // guard clause
+
+  return (
+    <article
+      className={`card ${className ?? ''}`}
+      aria-label={`Verbale ${verbale.codice}, stato: ${verbale.stato}`}
+    >
+      <button
+        onClick={handleArchivia}
+        disabled={isLoading}
+        aria-label={`Archivia verbale ${verbale.codice}`}
+        aria-busy={isLoading}
+        className="btn-primary min-h-[44px]"
+      >
+        {isLoading ? <Spinner /> : 'Archivia'}
+      </button>
+    </article>
+  )
+}
+```
+
+## Hooks
+```typescript
+// ✅ useEffect SEMPRE con dependencies e cleanup
+useEffect(() => {
+  const id = setInterval(fn, ENV.POLLING_INTERVAL)
+  return () => clearInterval(id)   // cleanup obbligatorio
+}, [])
+
+// ❌ VIETATO — memory leak
+useEffect(() => { setInterval(fn, 30_000) }, [])
+
+// ✅ useCallback per handler passati come prop
+const handleChange = useCallback((v: string) => {
+  setVerbale(prev => ({ ...prev, wbs: v }))
+}, [])
+```
+
+## Performance
+```typescript
+// ✅ React.memo per componenti costosi
+export const ProvaCard = React.memo(function ProvaCard({ prova }: Props) { ... })
+ProvaCard.displayName = 'ProvaCard'
+
+// ✅ React.lazy per code-splitting pagine
+const RegistroPage = React.lazy(() => import('@/pages/RegistroPage'))
+```
+
+## Componenti — regola critica
+```typescript
+// ❌ VIETATO — componente definito dentro render (ricreato ogni render)
+export function ProveBoard() {
+  const ProvaItem = ({ prova }: Props) => <div>{prova.tipo}</div>
+  return <ProvaItem prova={...} />
+}
+
+// ✅ CORRETTO — definito fuori
+function ProvaItem({ prova }: Props) { return <div>{prova.tipo}</div> }
+export function ProveBoard() { return <ProvaItem prova={...} /> }
+```
+
+## JSX — apostrofi e caratteri speciali negli handler
+```tsx
+// ❌ VIETATO — rompe il parser JSX
+<button onClick={() => scegli("Parte d'opera")}>Parte d'opera</button>
+
+// ✅ CORRETTO — array esterno + indice numerico
+const OPZIONI = ["Parte d'opera", "Dall'impresa", "Contraente Generale"]
+{OPZIONI.map((opt, i) => (
+  <button key={i} onClick={() => scegli(i)}>{opt}</button>
+))}
+```

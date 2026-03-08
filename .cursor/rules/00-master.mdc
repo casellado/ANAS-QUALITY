@@ -1,0 +1,67 @@
+---
+description: Regole MASTER sempre attive. Stack, guardrail, pattern core, design system.
+globs:
+alwaysApply: true
+---
+
+# PWA Verbali ANAS — Regole Master
+
+## Stack obbligatorio
+Vite 5 · React 18 · TypeScript 5 strict · Tailwind CSS v3 · MSAL.js v3 · Dexie.js v3 · jsPDF v2 · pnpm + Turborepo
+
+## Fonte di verità
+`coreanasquality.md` nella root. Se questo file la contraddice → la spec vince.
+Riferimento visivo UI: `verbali-cantiere.html` nella root (aprilo prima di costruire nuove UI).
+
+## Guardrail assoluti ❌ — fermati se stai per fare una di queste cose
+
+```
+❌ switch/if hardcoded su sigla verbale (VPC, VAG...) → usa MODULE_REGISTRY
+❌ ridefinire tipi già in @verbali/shared → importa da lì
+❌ token MSAL in localStorage/sessionStorage manualmente
+❌ eliminare dati → solo stato:'annullato' + storia[]
+❌ omettere id_cantiere da un'entità persistente
+❌ incrementare progressivi senza ETag optimistic locking
+❌ uploadFile senza ensureFolder prima
+❌ bypassare SubmenuMaterialePage nel routing
+❌ hardcodare valori che appartengono a src/config/env.ts
+❌ TypeScript `any` senza commento esplicito
+❌ cacheLocation:'localStorage' in msalConfig
+```
+
+## Regole obbligatorie ✅
+
+```
+✅ TypeScript strict su tutto (noImplicitAny, noUnusedLocals)
+✅ aria-label + role su ogni elemento interattivo
+✅ try/catch + toast.error su ogni async
+✅ cleanup in useEffect (clearInterval, abort, removeListener)
+✅ guard clause (early return) — no if annidati
+✅ id_cantiere come primo campo in ogni nuova entità
+✅ min-h-[44px] su tutti i bottoni (touch target)
+✅ tema SEMPRE dark — zero toggle, zero classi light-mode
+```
+
+## Navigazione obbligatoria — 3 livelli
+```
+DashboardPage → SubmenuMaterialePage → VerbaleNewPage → torna a SubmenuMaterialePage
+```
+`SubmenuMaterialePage` NON è bypassabile (mostra progressivo prossimo + ultimi verbali).
+
+## Design system dark — token brand-*
+```tsx
+// ✅ usa sempre token — zero hex hardcoded
+bg-brand-bg      (#080E1A)  bg-brand-card  (#0F1D2E)
+bg-brand-blue    (#1D6FD8)  text-brand-text (#E6EDF8)
+text-brand-text2 (#7A96B8)  text-brand-red-l (#F05454)
+
+// Classi pronte: .card .btn-primary .btn-ghost .input-field .wiz-progress .radio-row
+```
+
+## Import order
+```typescript
+// 1. React core  2. Librerie  3. @verbali/*  4. @/ locali
+import { useState } from 'react'
+import type { Verbale } from '@verbali/shared'
+import { useAuth } from '@/hooks/useAuth'
+```

@@ -1,0 +1,22 @@
+{
+  "name": "pwa-verbali",
+  "private": true,
+  "scripts": {
+    "dev":       "turbo run dev",
+    "dev:app":   "pnpm --filter @verbali/app dev",
+    "build":     "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint":      "turbo run lint",
+    "test":      "turbo run test",
+    "clean":     "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo":      "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

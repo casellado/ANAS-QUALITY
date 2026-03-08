@@ -1,0 +1,76 @@
+---
+description: Pattern OneDrive, ETag progressivi, polling, offline-safe — per services/* e hooks/*
+globs: packages/app/src/services/**,packages/app/src/hooks/**
+alwaysApply: false
+---
+
+# Services — OneDrive, ETag, Polling
+
+## ETag Optimistic Locking — OBBLIGATORIO per progressivi
+```typescript
+// ✅ retry con backoff esponenziale
+async function prossimoProg(idCantiere: string, sigla: string): Promise<number> {
+  for (let attempt = 0; attempt < MAX_RETRY; attempt++) {
+    const { data, etag } = await drive.readWithEtag<Contatori>(idCantiere, '_db/contatori.json')
+    const prossimo = ((data[sigla] as number | undefined) ?? 0) + 1
+    const ok = await drive.writeWithEtag(idCantiere, '_db/contatori.json',
+      { ...data, [sigla]: prossimo }, etag)
+    if (ok) return prossimo
+    // 412: qualcun altro ha scritto → backoff + jitter
+    await sleep(BASE_MS * 2 ** attempt + Math.random() * 100)
+  }
+  throw new Error(`Impossibile ottenere progressivo ${sigla} dopo ${MAX_RETRY} tentativi`)
+}
+
+// ❌ VIETATO — race condition tra ispettori
+const { data } = await drive.read(idCantiere, '_db/contatori.json')
+data[sigla] = (data[sigla] ?? 0) + 1
+await drive.write(idCantiere, '_db/contatori.json', data) // sovrascrive senza ETag
+```
+
+## ensureFolder — SEMPRE prima di upload
+```typescript
+// ✅ la struttura OneDrive la crea la PWA — non assumere che esista
+async function archiviaVerbale(verbale: Verbale, pdf: Blob): Promise<void> {
+  const cartella = `Calcestruzzo/Verbali`
+  await drive.ensureFolder(verbale.id_cantiere, cartella)   // ← sempre prima
+  await drive.uploadFile(verbale.id_cantiere, `${cartella}/${verbale.codice}.pdf`, pdf)
+}
+// ❌ VIETATO
+await drive.uploadFile(id, 'Calcestruzzo/Verbali/VPC-048.pdf', pdf) // → 404
+```
+
+## Polling — non blocca UI
+```typescript
+// ✅ usePolling con ref per callback aggiornata senza resettare interval
+export function usePolling(callback: () => void, interval: number): void {
+  const cbRef = useRef(callback)
+  cbRef.current = callback
+  useEffect(() => {
+    const id = setInterval(() => cbRef.current(), interval)
+    return () => clearInterval(id)
+  }, [interval])
+}
+```
+
+## Graph API — error handling
+```typescript
+async function readWithEtag<T>(idCantiere: string, path: string) {
+  const response = await fetch(graphUrl, { headers: { Authorization: `Bearer ${token}` } })
+  if (response.status === 404) return { data: null, etag: '' }
+  if (response.status === 412) return null
+  if (!response.ok) throw new Error(`Graph API ${response.status}: ${response.statusText}`)
+  return { data: await response.json() as T, etag: response.headers.get('ETag') ?? '' }
+}
+```
+
+## Offline-safe — Dexie prima, sync dopo
+```typescript
+async function salvaOfflineSafe(verbale: Verbale, pdf: Blob): Promise<void> {
+  await db.verbali.put({ ...verbale, sync_pending: true })
+  await db.syncQueue.add({ id: crypto.randomUUID(), tipo: 'verbale',
+    id_cantiere: verbale.id_cantiere, payload: verbale,
+    created_at: new Date().toISOString(), tentativi: 0 })
+  if (navigator.onLine) await processaSyncQueue(verbale.id_cantiere)
+}
+```

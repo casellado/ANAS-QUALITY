@@ -1,0 +1,70 @@
+---
+description: Wizard engine generico, WizardStepRenderer, focus management, bozza — per components/verbale/*
+globs: packages/app/src/components/verbale/**,packages/modules/**
+alwaysApply: false
+---
+
+# Wizard Engine Generico
+
+## Wizard — completamente generico, zero hardcoding
+```typescript
+// ✅ CORRETTO — legge steps dal modulo
+export function VerbaleWizard({ sigla, idCantiere }: Props) {
+  const tipoVerbale = getTipoVerbale(sigla) // dal MODULE_REGISTRY
+  if (!tipoVerbale) return <Errore messaggio={`Tipo '${sigla}' non trovato`} />
+  return (
+    <WizardStepRenderer
+      stepConfig={tipoVerbale.steps[currentStep]}
+      value={verbale[tipoVerbale.steps[currentStep].key as keyof Verbale] as string}
+      onChange={handleFieldChange}
+    />
+  )
+}
+
+// ❌ VIETATO — specifico per tipo
+if (sigla === 'VPC') return <WizardVPC />
+```
+
+## WizardStepRenderer — unica switch ammessa
+```typescript
+const STEP_COMPONENTS: Record<StepType, React.ComponentType<StepProps>> = {
+  radio: StepRadio, checkbox: StepCheckbox, text: StepText,
+  textarea: StepTextarea, number: StepNumber, date: StepDate,
+  wbs: WbsSelect, ddt: StepDDT, slump: StepSlump,
+  cubetti: CubettiStep, foto: FotoStep, firme: StepFirme, figura: FiguraSelect,
+}
+export function WizardStepRenderer({ stepConfig, value, onChange }: StepProps) {
+  const StepComponent = STEP_COMPONENTS[stepConfig.tipo]
+  if (!StepComponent) { console.error(`StepType '${stepConfig.tipo}' non implementato`); return null }
+  return <StepComponent config={stepConfig} value={value} onChange={onChange} />
+}
+```
+
+## Focus management — obbligatorio ad ogni avanzamento
+```typescript
+const stepRef = useRef<HTMLDivElement>(null)
+useEffect(() => {
+  const first = stepRef.current?.querySelector<HTMLElement>(
+    'input:not([disabled]), select:not([disabled]), button:not([disabled])'
+  )
+  first?.focus()
+}, [currentStep])
+```
+
+## Salvataggio bozza — ad ogni step
+```typescript
+const handleAvanza = async () => {
+  if (!puoAvanzare) return
+  await db.verbali.put({ ...verbale, stato: 'bozza', updated_at: now() })
+  setCurrentStep(prev => prev + 1)
+}
+```
+
+## Chain of custody NTC 2018 — blocca prima di archiviare
+```typescript
+const errori = validaChainOfCustody(verbale)
+if (errori.length > 0) {
+  toast.error(`⛔ Chain of custody incompleta: ${errori.join(', ')}`)
+  return
+}
+```

@@ -1,0 +1,72 @@
+---
+description: Offline-first, Dexie schema, SyncQueue, Workbox — per db/* e sw/*
+globs: packages/app/src/db/**,packages/app/src/sw/**
+alwaysApply: false
+---
+
+# Offline-First — Dexie e Sync
+
+## Principio: scrivi in Dexie prima, OneDrive dopo
+La PWA funziona SEMPRE anche in airplane mode. Ogni scrittura → Dexie locale → poi OneDrive.
+
+## Schema Dexie — id_cantiere su OGNI store
+```typescript
+this.version(1).stores({
+  verbali:   'id, id_cantiere, tipo, stato, wbs, data, sync_pending',
+  prove:     'id, id_cantiere, stato, priorita, data_richiesta',
+  wbs:       '[id_cantiere+codice], id_cantiere',
+  syncQueue: 'id, id_cantiere, tipo, created_at',
+})
+
+// OGNI query deve filtrare per id_cantiere
+const verbali = await db.verbali
+  .where({ id_cantiere: cantiereId })   // MAI senza filtro
+  .sortBy('data')
+```
+
+## Strategia lettura online/offline
+```typescript
+async function leggiVerbali(idCantiere: string): Promise<Verbale[]> {
+  if (navigator.onLine) {
+    try {
+      const data = await oneDriveService.read<Verbale[]>(idCantiere, '_db/verbali.json')
+      await db.transaction('rw', db.verbali, async () => {
+        for (const v of data) await db.verbali.put(v)
+      })
+      return data
+    } catch { /* fallback Dexie */ }
+  }
+  return db.verbali.where('id_cantiere').equals(idCantiere).toArray()
+}
+```
+
+## Feedback visivo obbligatorio
+```tsx
+// OfflineBanner — visibile durante disconnessione
+if (!isOnline) return (
+  <div role="status" aria-live="polite"
+       className="bg-brand-amber/10 border-b border-brand-amber/30 px-4 py-2
+                  flex items-center gap-2 text-brand-amber-l text-sm">
+    <span aria-hidden="true">⚡</span>
+    Offline — le modifiche saranno sincronizzate alla riconnessione
+  </div>
+)
+```
+
+## useOnlineStatus — hook corretto
+```typescript
+export function useOnlineStatus(): boolean {
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  useEffect(() => {
+    const on  = () => setIsOnline(true)
+    const off = () => setIsOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => {
+      window.removeEventListener('online', on)
+      window.removeEventListener('offline', off)
+    }
+  }, [])
+  return isOnline
+}
+```

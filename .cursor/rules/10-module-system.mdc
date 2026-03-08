@@ -1,0 +1,73 @@
+---
+description: Sistema moduli verbale — come creare e registrare nuovi plugin in packages/modules/*
+globs: packages/modules/**
+alwaysApply: false
+---
+
+# Sistema Moduli — Plugin Architecture
+
+## Contratto obbligatorio: VerbaleModule da @verbali/shared
+```typescript
+// packages/modules/{nome}/src/index.ts
+import type { VerbaleModule } from '@verbali/shared'
+
+export const ModuleNome: VerbaleModule = {
+  id:     'nome',          // lowercase, no spazi — URL param
+  nome:   'Nome Materiale',
+  icona:  '🔧',
+  colore: '#5B4AD8',
+  tipiVerbale: [{
+    sigla:       'VNN',
+    nome:        'Verbale Nuovo',
+    descrizione: 'Descrizione breve per il sottomenu.',
+    icona:       '🔧',
+    colore:      '#5B4AD8',
+    normativa:   'NTC 2018',
+    firme:       ['direzione_lavori', 'incaricato_impresa'],
+    steps:       stepsVNN,      // WizardStep[] definiti in steps/stepsVNN.ts
+    generaPdf:   generaPdfVNN,  // funzione in pdf/pdfVNN.ts
+  }],
+}
+```
+
+## Struttura package modulo
+```
+packages/modules/{nome}/
+├── src/
+│   ├── steps/stepsVNN.ts   # WizardStep[] — i passi del wizard
+│   ├── pdf/pdfVNN.ts       # generaPdf(verbale): Promise<Blob>
+│   └── index.ts            # export ModuleNome: VerbaleModule
+└── package.json            # { "name": "@verbali/mod-{nome}" }
+```
+
+## Registrazione — UNA sola riga nel core
+```typescript
+// packages/app/src/config/moduleRegistry.ts
+import { ModuleNome } from '@verbali/mod-nome'    // ← aggiunta questa
+
+export const MODULE_REGISTRY: VerbaleModule[] = [
+  ModuleCalcestruzzo,
+  ModuleNome,   // ← UNICA modifica al core — zero altro da cambiare
+]
+```
+
+## Regola: MAI logica business del modulo nel core
+```typescript
+// ❌ VIETATO nel core app
+if (sigla === 'VNN') { /* logica specifica */ }
+
+// ✅ CORRETTO — la logica sta nel modulo, il core è cieco
+// Il core legge steps e generaPdf dal modulo — non sa cosa c'è dentro
+```
+
+## package.json del modulo
+```json
+{
+  "name": "@verbali/mod-{nome}",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": { "@verbali/shared": "workspace:*" }
+}
+```
