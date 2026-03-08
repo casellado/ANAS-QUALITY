@@ -5,6 +5,7 @@ import { db } from '@/db/schema'
 import type { Verbale, VerbaleIndex } from '@verbali/shared'
 import { formatDataIT } from '@verbali/shared'
 import { Spinner } from '@/components/ui/Spinner'
+import { FolderOpen } from 'lucide-react'
 
 /**
  * SubmenuMaterialePage — schermata OBBLIGATORIA tra Dashboard e Wizard.
@@ -22,6 +23,7 @@ export default function SubmenuMaterialePage() {
   const { cantiereId, materiale }    = useParams<{ cantiereId: string; materiale: string }>()
   const modulo                       = getModule(materiale ?? '')
   const [ultimi, setUltimi]          = useState<VerbaleIndex[]>([])
+  const [totaleArchiviati, setTotaleArchiviati] = useState(0)
   const [isLoading, setIsLoading]    = useState(true)
 
   useEffect(() => {
@@ -31,11 +33,16 @@ export default function SubmenuMaterialePage() {
     db.verbali
       .where({ id_cantiere: cantiereId })
       .filter((v: Verbale) => modulo?.tipiVerbale.some(t => t.sigla === v.tipo) ?? false)
-      .reverse()
-      .limit(5)
       .toArray()
       .then((rows: Verbale[]) => {
-        if (!controller.signal.aborted) setUltimi(rows as VerbaleIndex[])
+        if (controller.signal.aborted) return
+        const archiviati = rows.filter(v => v.stato === 'completo')
+        setTotaleArchiviati(archiviati.length)
+        // Ultimi 5 per la preview (tutti gli stati)
+        const sorted = [...rows].sort((a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        )
+        setUltimi(sorted.slice(0, 5) as VerbaleIndex[])
       })
       .catch(() => { /* errore lettura Dexie — non bloccante */ })
       .finally(() => {
@@ -86,6 +93,26 @@ export default function SubmenuMaterialePage() {
             <span className="badge badge-blue font-mono">{tipo.sigla}</span>
           </button>
         ))}
+      </div>
+
+      {/* ── Archivio verbali ──────────────────────────────── */}
+      <div>
+        <button
+          onClick={() => navigate(`/cantiere/${cantiereId}/${materiale}/archivio`)}
+          className="card-hover flex items-center gap-4 p-4 w-full text-left"
+          aria-label={`Apri archivio verbali ${modulo.nome}`}
+        >
+          <FolderOpen className="w-6 h-6 text-brand-amber" aria-hidden="true" />
+          <div className="flex-1">
+            <p className="font-semibold text-brand-text text-sm">Archivio Verbali</p>
+            <p className="text-xs text-brand-text2 mt-0.5">
+              Consulta, esporta e scarica i verbali archiviati
+            </p>
+          </div>
+          <span className="badge badge-amber font-mono text-xs tabular-nums">
+            {totaleArchiviati}
+          </span>
+        </button>
       </div>
 
       {/* Ultimi verbali */}

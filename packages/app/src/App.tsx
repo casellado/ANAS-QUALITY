@@ -16,6 +16,7 @@ const VerbaleEditPage       = lazy(() => import('@/pages/VerbaleEditPage'))
 const ProvePage             = lazy(() => import('@/pages/ProvePage'))
 const RegistroPage          = lazy(() => import('@/pages/RegistroPage'))
 const RegistroCubettiPage   = lazy(() => import('@/pages/RegistroCubettiPage'))
+const ArchivioVerbaliPage   = lazy(() => import('@/pages/ArchivioVerbaliPage'))
 const AdminPage             = lazy(() => import('@/pages/AdminPage'))
 
 const PageLoader = () => (
@@ -68,6 +69,11 @@ export function App() {
           {/* ← ROUTE OBBLIGATORIA — MAI bypassare */}
           <Route path="/cantiere/:cantiereId/:materiale" element={
             <PrivateRoute><SubmenuMaterialePage /></PrivateRoute>
+          } />
+
+          {/* Archivio verbali per materiale */}
+          <Route path="/cantiere/:cantiereId/:materiale/archivio" element={
+            <PrivateRoute><ArchivioVerbaliPage /></PrivateRoute>
           } />
 
           {/* Wizard nuovo verbale */}

@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/ToastContext'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { VerbaleWizard } from '@/components/verbale/VerbaleWizard'
 import { generaPdf, scaricaPdf, apriPdf } from '@/services/PdfService'
+import { archiviaVerbale } from '@/services/ArchivioService'
 
 export default function VerbaleNewPage() {
   const { cantiereId, materiale, sigla } = useParams<{
@@ -28,23 +29,30 @@ export default function VerbaleNewPage() {
     [sigla],
   )
 
-  // ── Completamento wizard → genera PDF ───────────────────
+  // ── Completamento wizard → genera PDF + archivia ────────
   const handleComplete = useCallback(
     async (verbale: Verbale) => {
       setIsGenerating(true)
       try {
+        // 1. Genera PDF
         const blob = await generaPdf(verbale)
         const nome = generaNomePdf(verbale.codice)
+
+        // 2. Archivia: Dexie (immediato) + OneDrive (se online, in prod)
+        const categoria = materiale ?? 'Calcestruzzo'
+        await archiviaVerbale(verbale, blob, nome, categoria)
+
+        // 3. Aggiorna UI
         setPdfBlob(blob)
         setPdfNome(nome)
-        toast.success(`${tipoVerbale?.nome ?? 'Verbale'} completato — PDF pronto!`)
+        toast.success(`${tipoVerbale?.nome ?? 'Verbale'} completato e archiviato — PDF pronto!`)
       } catch (error) {
-        toast.error(`Errore PDF: ${error instanceof Error ? error.message : 'Sconosciuto'}`)
+        toast.error(`Errore: ${error instanceof Error ? error.message : 'Sconosciuto'}`)
       } finally {
         setIsGenerating(false)
       }
     },
-    [tipoVerbale?.nome, toast],
+    [materiale, tipoVerbale?.nome, toast],
   )
 
   // ── Annullamento con conferma ───────────────────────────
