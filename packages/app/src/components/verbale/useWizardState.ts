@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Verbale, TipoVerbale } from '@verbali/shared'
 import { VERBALE_SLOT_DEFAULT, now, today } from '@verbali/shared'
 import { db } from '@/db/schema'
@@ -149,6 +149,31 @@ export function useWizardState(tipoVerbale: TipoVerbale, idCantiere: string) {
   // ── Indietro ──────────────────────────────────────────────
   const indietro = useCallback(() => {
     if (currentStep > 0) setCurrentStep(s => s - 1)
+  }, [currentStep])
+
+  // ── Autofill campi con valori dal sistema ─────────────────
+  useEffect(() => {
+    const step = steps[currentStep]
+    if (!step?.autofill) return
+
+    // Solo se il campo è ancora vuoto
+    const currentVal = String(verbale[step.key as keyof Verbale] ?? '')
+    if (currentVal.trim()) return
+
+    if (step.autofill === 'data' && !currentVal) {
+      handleFieldChange(step.key, today())
+    } else if (step.autofill === 'dl_nome') {
+      // Legge il profilo utente da localStorage
+      try {
+        const raw = localStorage.getItem('anas_user_profile')
+        if (raw) {
+          const profilo = JSON.parse(raw) as { nome?: string; cognome?: string; qualifica?: string }
+          const nome = [profilo.qualifica, profilo.nome, profilo.cognome].filter(Boolean).join(' ')
+          if (nome) handleFieldChange(step.key, nome)
+        }
+      } catch { /* profilo non disponibile */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep])
 
   // ── Step corrente ─────────────────────────────────────────

@@ -8,7 +8,9 @@ import {
   StepRadio,
   StepCheckbox,
 } from '@/components/verbale/steps/SimpleSteps'
+import { StepTextMemoria } from '@/components/verbale/steps/StepTextMemoria'
 import { StepFirme } from '@/components/verbale/StepFirme'
+import { StepFoto } from '@/components/verbale/StepFoto'
 
 // ── Placeholder per step complessi (moduli) ─────────────────
 function StepPlaceholder({ config }: StepProps) {
@@ -32,13 +34,13 @@ const STEP_COMPONENTS: Record<StepType, React.ComponentType<StepProps>> = {
   date:     StepDate,
   radio:    StepRadio,
   checkbox: StepCheckbox,
+  foto:     StepFoto,
+  firme:    StepFirme,
   // Step complessi → placeholder fino a implementazione modulo
   wbs:      StepPlaceholder,
   ddt:      StepPlaceholder,
   slump:    StepPlaceholder,
   cubetti:  StepPlaceholder,
-  foto:     StepPlaceholder,
-  firme:    StepFirme,
   figura:   StepPlaceholder,
 }
 
@@ -57,6 +59,11 @@ interface WizardStepRendererProps {
  * NON contiene logica specifica per tipo verbale — tutto dal registry.
  */
 export function WizardStepRenderer({ config, value, onChange, error }: WizardStepRendererProps) {
+  // Se il campo testo ha memoria → usa StepTextMemoria con autocomplete
+  if (config.tipo === 'text' && config.memoria) {
+    return <StepTextMemoria config={config} value={value} onChange={onChange} error={error} />
+  }
+
   const Component = STEP_COMPONENTS[config.tipo]
 
   if (!Component) {

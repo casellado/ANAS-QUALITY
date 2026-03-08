@@ -186,7 +186,7 @@ function FirmaCorrente({
         </span>
       </p>
 
-      <FirmaCanvas onFirma={onFirma} onReset={onReset} disabled={false} />
+      <FirmaCanvas key={`firma-${index}`} onFirma={onFirma} onReset={onReset} disabled={false} />
 
       <div className="flex gap-2">
         {!isFirst && (

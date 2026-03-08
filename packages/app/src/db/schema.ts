@@ -40,14 +40,35 @@ interface Nota {
   created_at:    string
 }
 
+/** Record autocomplete: valori inseriti dall'utente per campo, con memoria. */
+interface AutocompleteRecord {
+  id_cantiere: string
+  campo:       string   // 'opera', 'wbs', 'impresa', 'progr_da', 'progr_a'...
+  valori:      string[] // valori unici inseriti (max 50)
+}
+
+/**
+ * Contatore progressivi locali.
+ * Chiave composita: id_cantiere + sigla.
+ * Usato offline — in produzione usa OneDrive + ETag (ContatoriService).
+ */
+interface ContatoreLocale {
+  id_cantiere: string
+  sigla:       string   // 'VAG', 'VPC', 'VAC'
+  valore:      number   // ultimo progressivo assegnato
+  updated_at:  string   // ISO datetime
+}
+
 class VerbaleDatabase extends Dexie {
-  verbali!:           Table<Verbale,          string>
-  prove!:             Table<Prova,            string>
-  wbs!:               Table<WbsEntry,         string>
-  syncQueue!:         Table<SyncTask,         string>
-  prove_calendario!:  Table<ProvaCalendario,  string>
-  memoria_pes!:       Table<MemoriaPES,       string>
-  note_bacheca!:      Table<Nota,             string>
+  verbali!:               Table<Verbale,            string>
+  prove!:                 Table<Prova,              string>
+  wbs!:                   Table<WbsEntry,           string>
+  syncQueue!:             Table<SyncTask,           string>
+  prove_calendario!:      Table<ProvaCalendario,    string>
+  memoria_pes!:           Table<MemoriaPES,         string>
+  note_bacheca!:          Table<Nota,               string>
+  autocomplete_memoria!:  Table<AutocompleteRecord, string>
+  contatori!:             Table<ContatoreLocale,    string>
 
   constructor() {
     super('VerbaliCantiereDB')
@@ -70,10 +91,35 @@ class VerbaleDatabase extends Dexie {
       memoria_pes:      'id_cantiere',
       note_bacheca:     'id, id_cantiere, created_at',
     })
+
+    // ── v3: Autocomplete memoria campi ──────────────────
+    this.version(3).stores({
+      verbali:             'id, id_cantiere, tipo, stato, wbs, data, sync_pending',
+      prove:               'id, id_cantiere, stato, priorita, data_richiesta, assegnata_a',
+      wbs:                 '[id_cantiere+codice], id_cantiere',
+      syncQueue:           'id, id_cantiere, tipo, created_at',
+      prove_calendario:    'id, id_cantiere, stato, data, categoria, ispettore_email',
+      memoria_pes:         'id_cantiere',
+      note_bacheca:        'id, id_cantiere, created_at',
+      autocomplete_memoria:'[id_cantiere+campo], id_cantiere, campo',
+    })
+
+    // ── v4: Contatori progressivi locali ────────────────
+    this.version(4).stores({
+      verbali:             'id, id_cantiere, tipo, stato, wbs, data, sync_pending',
+      prove:               'id, id_cantiere, stato, priorita, data_richiesta, assegnata_a',
+      wbs:                 '[id_cantiere+codice], id_cantiere',
+      syncQueue:           'id, id_cantiere, tipo, created_at',
+      prove_calendario:    'id, id_cantiere, stato, data, categoria, ispettore_email',
+      memoria_pes:         'id_cantiere',
+      note_bacheca:        'id, id_cantiere, created_at',
+      autocomplete_memoria:'[id_cantiere+campo], id_cantiere, campo',
+      contatori:           '[id_cantiere+sigla], id_cantiere',
+    })
   }
 }
 
-export type { Nota }
+export type { Nota, AutocompleteRecord, ContatoreLocale }
 
 /** Singleton del database — unica istanza per tutta l'app */
 export const db = new VerbaleDatabase()

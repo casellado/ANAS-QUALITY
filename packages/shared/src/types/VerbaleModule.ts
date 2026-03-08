@@ -45,6 +45,12 @@ export interface WizardStep {
   min?:          number
   /** Step incremento per tipo 'number' */
   step?:         number
+  /** Se true, il campo testo mostra suggerimenti da compilazioni precedenti */
+  memoria?:      boolean
+  /** Se true, il valore viene precompilato automaticamente dal sistema */
+  autofill?:     'data' | 'dl_nome'
+  /** Numero massimo di foto per step 'foto' */
+  maxFoto?:      number
 }
 
 /**

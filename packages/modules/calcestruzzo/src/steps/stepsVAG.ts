@@ -1,24 +1,28 @@
 import type { WizardStep } from '@verbali/shared'
 
 export const stepsVAG: WizardStep[] = [
-  // ── STEP 1–7: Dati identificativi opera ──────────────────
+  // ── STEP 1: Opera ─────────────────────────────────────────
   {
     key: 'opera',
     domanda: "Qual è l'opera di riferimento?",
-    hint: "Inserisci il nome completo dell'opera come indicato nel progetto.",
+    hint: 'Inserisci il nome completo. I valori precedenti appaiono nel menu.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. Viadotto Vallo di Diano',
     max: 100,
+    memoria: true,
   },
+  // ── STEP 2: WBS ───────────────────────────────────────────
   {
     key: 'wbs',
-    domanda: "Inserisci il codice WBS dell'opera",
-    hint: 'Formato: WBS.XX.XXX.XXXX — seleziona dalla lista o inserisci manualmente.',
+    domanda: 'Inserisci il codice WBS',
+    hint: 'Formato: WBS.XX.XXX.XXXX — seleziona dalla lista o inserisci.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. WBS.SS.001.0010',
+    memoria: true,
   },
+  // ── STEP 3: Parte opera ───────────────────────────────────
   {
     key: 'parte_opera',
     domanda: "Quale parte dell'opera verrà gettata?",
@@ -35,80 +39,92 @@ export const stepsVAG: WizardStep[] = [
       'Altro (vedi note)',
     ],
   },
+  // ── STEP 4: Elaborati di riferimento ──────────────────────
   {
     key: 'v6',
-    domanda: 'Quali elaborati di progetto sono stati verificati?',
-    hint: 'Indica i numeri di tavola o elaborati grafici di riferimento.',
+    domanda: 'Elaborati di progetto verificati',
+    hint: 'Indica tavole o elaborati grafici di riferimento. Facoltativo.',
     tipo: 'text',
-    obbligatorio: true,
+    obbligatorio: false,  // NON bloccante come richiesto dall'utente
     placeholder: 'es. TAV. S-045, TAV. S-046',
     max: 200,
   },
+  // ── STEP 5: Progressiva DA ────────────────────────────────
   {
     key: 'v7',
     domanda: 'Progressiva chilometrica DA (inizio tratto)',
-    hint: 'Formato: km+m — es. 12+400',
+    hint: 'Formato: km+m — i valori precedenti appaiono nel menu.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. 12+400',
     max: 10,
+    memoria: true,
   },
+  // ── STEP 6: Progressiva A ────────────────────────────────
   {
     key: 'v8',
     domanda: 'Progressiva chilometrica A (fine tratto)',
-    hint: 'Formato: km+m — es. 12+850',
+    hint: 'Formato: km+m — i valori precedenti appaiono nel menu.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. 12+850',
     max: 10,
+    memoria: true,
   },
+  // ── STEP 7: Data sopralluogo ──────────────────────────────
   {
     key: 'data',
     domanda: 'Data del sopralluogo',
-    hint: 'Seleziona la data in cui viene effettuato il sopralluogo.',
+    hint: 'La data odierna è precompilata. Puoi modificarla se necessario.',
     tipo: 'date',
     obbligatorio: true,
+    autofill: 'data',
   },
-
-  // ── STEP 8–11: Parti coinvolte ───────────────────────────
+  // ── STEP 8: Componente DL ─────────────────────────────────
   {
     key: 'v1',
-    domanda: "Nome del componente dell'Ufficio Direzione Lavori",
-    hint: 'Inserisci il nome completo del tecnico DL che firma il verbale.',
+    domanda: "Componente dell'Ufficio Direzione Lavori",
+    hint: 'Il sistema inserisce automaticamente il tecnico loggato.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. Ing. Mario Rossi',
     max: 100,
+    autofill: 'dl_nome',
   },
+  // ── STEP 9: Rappresentante CG ────────────────────────────
   {
     key: 'v2',
-    domanda: 'Nome del rappresentante del Contraente Generale',
-    hint: 'Tecnico del CG presente al sopralluogo.',
+    domanda: 'Rappresentante del Contraente Generale',
+    hint: 'Tecnico CG presente al sopralluogo. I valori precedenti appaiono nel menu.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. Geom. Luigi Bianchi',
     max: 100,
+    memoria: true,
   },
+  // ── STEP 10: Impresa esecutrice ───────────────────────────
   {
     key: 'v3',
     domanda: 'Impresa esecutrice',
-    hint: "Ragione sociale dell'impresa esecutrice delle opere in cemento armato.",
+    hint: "Ragione sociale dell'impresa. Compilala una volta, poi la ritrovi nel menu.",
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'es. Costruzioni Srl',
     max: 150,
+    memoria: true,
   },
+  // ── STEP 11: Codice PCQ ───────────────────────────────────
   {
     key: 'v4',
     domanda: 'Codice Piano Controllo Qualità (PCQ)',
-    hint: 'Massimo 22 caratteri — es. PCQ-A3-CLS-2025-001',
+    hint: 'Massimo 22 caratteri. Il sistema lo ricorda per i verbali successivi.',
     tipo: 'text',
     obbligatorio: true,
     placeholder: 'PCQ-XXXX-XXXX-XXXX',
     max: 22,
+    memoria: true,
   },
-
-  // ── STEP 12: Conformità casserature ──────────────────────
+  // ── STEP 12: Conformità casserature ───────────────────────
   {
     key: 'v9',
     domanda: 'Le casserature e gli apprestamenti sono conformi a:',
@@ -121,8 +137,7 @@ export const stepsVAG: WizardStep[] = [
       'Entrambi',
     ],
   },
-
-  // ── STEP 13: Tipo sopralluogo ────────────────────────────
+  // ── STEP 13: Tipo sopralluogo ─────────────────────────────
   {
     key: 'v10',
     domanda: 'Il sopralluogo ha verificato: (seleziona tutto ciò che si applica)',
@@ -135,8 +150,7 @@ export const stepsVAG: WizardStep[] = [
       "Verifica dei ferri d'armatura messi in opera",
     ],
   },
-
-  // ── STEP 14: Esito autorizzazione ────────────────────────
+  // ── STEP 14: Esito autorizzazione ─────────────────────────
   {
     key: 'v11',
     domanda: "Esito dell'autorizzazione al getto",
@@ -148,8 +162,16 @@ export const stepsVAG: WizardStep[] = [
       "NON ha autorizzato l'esecuzione dei getti di calcestruzzo",
     ],
   },
-
-  // ── STEP 15: Firme digitali ──────────────────────────────
+  // ── STEP 15: Foto allegate (facoltativo) ──────────────────
+  {
+    key: 'v13',
+    domanda: 'Foto del sopralluogo',
+    hint: 'Allega fino a 3 foto del cantiere. Facoltativo — puoi proseguire senza.',
+    tipo: 'foto',
+    obbligatorio: false,
+    maxFoto: 3,
+  },
+  // ── STEP 16: Firme digitali ───────────────────────────────
   {
     key: 'firma_data_url',
     domanda: 'Firme digitali delle parti',
@@ -163,4 +185,3 @@ export const stepsVAG: WizardStep[] = [
     ],
   },
 ]
-
